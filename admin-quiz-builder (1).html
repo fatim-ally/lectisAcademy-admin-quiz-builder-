@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lectis Academy — Quiz Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --ev: #0D7C66; --ev-dark: #095A4A; --mint: #40B89C; --sun: #F9B234;
+  --cream: #FEFAF3; --charcoal: #1A2332; --slate: #3D4F5F; --wgray: #8896A4;
+  --soft-mint: #E8F5F0; --white: #ffffff; --border: rgba(0,0,0,0.08);
+  --red: #e74c3c; --red-light: rgba(231,76,60,0.08);
+  --transition: 0.2s ease;
+}
+html, body { min-height: 100%; font-family: 'Plus Jakarta Sans', sans-serif; background: var(--cream); }
+
+/* ── HEADER ── */
+.header { background: var(--charcoal); padding: 14px 28px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 200; }
+.header-logo { color: #fff; font-family: 'DM Serif Display', serif; font-size: 18px; }
+.header-logo span { color: var(--sun); }
+.header-tag { background: rgba(249,178,52,0.15); border: 1px solid rgba(249,178,52,0.25); color: var(--sun); font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 12px; border-radius: 20px; }
+.header-spacer { flex: 1; }
+.header-btn { display: flex; align-items: center; gap: 6px; background: var(--ev); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; transition: background var(--transition); }
+.header-btn:hover { background: var(--ev-dark); }
+
+/* ── LAYOUT ── */
+.layout { display: grid; grid-template-columns: 280px 1fr; min-height: calc(100vh - 52px); }
+
+/* ── SIDEBAR ── */
+.sidebar { background: var(--white); border-right: 1px solid var(--border); padding: 20px 16px; display: flex; flex-direction: column; gap: 6px; }
+.sidebar-label { font-size: 10px; font-weight: 700; color: var(--wgray); letter-spacing: 2px; text-transform: uppercase; padding: 4px 8px; margin-top: 8px; }
+.quiz-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; cursor: pointer; transition: all var(--transition); border: 1px solid transparent; }
+.quiz-item:hover { background: var(--soft-mint); }
+.quiz-item.active { background: var(--soft-mint); border-color: rgba(13,124,102,0.2); }
+.quiz-item-icon { width: 32px; height: 32px; border-radius: 8px; background: var(--soft-mint); display: flex; align-items: center; justify-content: center; font-size: 15px; color: var(--ev); flex-shrink: 0; }
+.quiz-item.active .quiz-item-icon { background: var(--ev); color: #fff; }
+.quiz-item-name { font-size: 13px; font-weight: 600; color: var(--charcoal); }
+.quiz-item-count { font-size: 11px; color: var(--wgray); }
+.quiz-item-arrow { margin-left: auto; font-size: 14px; color: var(--wgray); }
+.new-quiz-btn { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 10px; border: 1.5px dashed rgba(13,124,102,0.3); color: var(--ev); font-size: 13px; font-weight: 600; cursor: pointer; background: none; font-family: 'Plus Jakarta Sans', sans-serif; transition: all var(--transition); margin-top: 8px; width: 100%; }
+.new-quiz-btn:hover { background: var(--soft-mint); border-color: var(--ev); }
+
+/* ── MAIN EDITOR ── */
+.editor { padding: 28px 32px; overflow-y: auto; }
+
+/* Empty state */
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; gap: 16px; text-align: center; }
+.empty-icon { font-size: 48px; color: var(--wgray); opacity: 0.4; }
+.empty-title { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--charcoal); }
+.empty-sub { font-size: 14px; color: var(--wgray); }
+
+/* Editor header */
+.editor-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+.editor-title-wrap { flex: 1; }
+.editor-title-input { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--charcoal); border: none; background: none; outline: none; width: 100%; padding: 0; }
+.editor-title-input::placeholder { color: var(--wgray); }
+.editor-meta { display: flex; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+.meta-pill { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--slate); background: var(--cream); border: 1px solid var(--border); border-radius: 20px; padding: 4px 12px; }
+.editor-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+/* Share link box */
+.share-box { background: var(--soft-mint); border: 1px solid rgba(13,124,102,0.15); border-radius: 12px; padding: 14px 18px; margin-bottom: 24px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.share-link { flex: 1; font-size: 13px; color: var(--ev); font-weight: 600; word-break: break-all; min-width: 200px; }
+.share-copy-btn { display: flex; align-items: center; gap: 6px; background: var(--ev); color: #fff; border: none; padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif; transition: background var(--transition); flex-shrink: 0; }
+.share-copy-btn:hover { background: var(--ev-dark); }
+
+/* ── QUESTION CARDS ── */
+.questions-list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
+.q-card { background: var(--white); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+.q-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.q-num { font-size: 11px; font-weight: 700; color: var(--ev); letter-spacing: 1.5px; text-transform: uppercase; }
+.q-type-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+.q-type-mcq { background: rgba(13,124,102,0.1); color: var(--ev); }
+.q-type-written { background: rgba(249,178,52,0.15); color: #B8860B; }
+.q-card-actions { margin-left: auto; display: flex; gap: 6px; }
+.q-icon-btn { background: none; border: none; color: var(--wgray); cursor: pointer; padding: 4px 6px; border-radius: 6px; font-size: 16px; transition: all var(--transition); }
+.q-icon-btn:hover { background: var(--cream); color: var(--charcoal); }
+.q-icon-btn.danger:hover { background: var(--red-light); color: var(--red); }
+
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 12px; font-weight: 600; color: var(--wgray); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+.field input, .field textarea, .field select {
+  width: 100%; padding: 10px 13px; border-radius: 9px;
+  border: 1.5px solid var(--border); background: var(--cream);
+  font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif;
+  color: var(--charcoal); outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+.field input:focus, .field textarea:focus, .field select:focus { border-color: var(--ev); box-shadow: 0 0 0 3px rgba(13,124,102,0.1); }
+.field input::placeholder, .field textarea::placeholder { color: var(--wgray); }
+.field textarea { resize: vertical; min-height: 70px; }
+
+/* MCQ options editor */
+.options-editor { display: flex; flex-direction: column; gap: 8px; }
+.option-row { display: flex; align-items: center; gap: 8px; }
+.option-letter { width: 28px; height: 28px; border-radius: 7px; background: var(--cream); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--slate); flex-shrink: 0; }
+.option-row input { flex: 1; }
+.correct-radio { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--wgray); cursor: pointer; flex-shrink: 0; white-space: nowrap; }
+.correct-radio input[type="radio"] { accent-color: var(--ev); width: 14px; height: 14px; }
+.correct-radio.selected { color: var(--ev); font-weight: 600; }
+
+/* Add question buttons */
+.add-q-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.add-q-btn { display: flex; align-items: center; gap: 7px; padding: 10px 18px; border-radius: 10px; border: 1.5px dashed rgba(0,0,0,0.15); background: none; font-size: 13px; font-weight: 600; color: var(--slate); cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif; transition: all var(--transition); }
+.add-q-btn:hover { border-color: var(--ev); color: var(--ev); background: var(--soft-mint); }
+
+/* Settings row */
+.settings-row { display: flex; gap: 14px; margin-bottom: 24px; flex-wrap: wrap; }
+.setting-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; flex: 1; min-width: 160px; }
+.setting-card label { font-size: 11px; font-weight: 700; color: var(--wgray); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px; }
+.setting-card input, .setting-card select { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--cream); font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif; color: var(--charcoal); outline: none; }
+.setting-card input:focus, .setting-card select:focus { border-color: var(--ev); }
+
+/* Buttons */
+.btn-primary { display: inline-flex; align-items: center; gap: 7px; background: var(--ev); color: #fff; border: none; padding: 10px 20px; border-radius: 9px; font-size: 13px; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; transition: background var(--transition); }
+.btn-primary:hover { background: var(--ev-dark); }
+.btn-outline { display: inline-flex; align-items: center; gap: 7px; background: var(--white); color: var(--slate); border: 1.5px solid var(--border); padding: 9px 18px; border-radius: 9px; font-size: 13px; font-weight: 600; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; transition: all var(--transition); }
+.btn-outline:hover { border-color: var(--ev); color: var(--ev); }
+.btn-danger { display: inline-flex; align-items: center; gap: 7px; background: var(--red-light); color: var(--red); border: 1px solid rgba(231,76,60,0.2); padding: 9px 18px; border-radius: 9px; font-size: 13px; font-weight: 600; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; transition: all var(--transition); }
+.btn-danger:hover { background: rgba(231,76,60,0.15); }
+
+/* Toast */
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--charcoal); color: #fff; padding: 12px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; z-index: 999; display: flex; align-items: center; gap: 8px; }
+.toast.show { opacity: 1; }
+
+/* Modal backdrop */
+.modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(26,35,50,0.58); z-index: 300; align-items: center; justify-content: center; padding: 18px; }
+.modal-backdrop.show { display: flex; }
+.modal { background: var(--white); border-radius: 16px; padding: 28px; width: 100%; max-width: 440px; margin: 16px; box-shadow: 0 24px 70px rgba(26,35,50,0.22); }
+.modal-title { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--charcoal); margin-bottom: 6px; }
+.modal-sub { font-size: 14px; color: var(--wgray); margin-bottom: 24px; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+.modal-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 22px; }
+.modal-close { width: 32px; height: 32px; border: none; border-radius: 8px; background: transparent; color: var(--charcoal); cursor: pointer; font-size: 20px; display: inline-flex; align-items: center; justify-content: center; }
+.modal-close:hover { background: var(--cream); }
+.collab-modal { max-width: 620px; }
+.collab-row { display: grid; grid-template-columns: 1fr 150px; gap: 12px; align-items: end; }
+.collab-info { display: flex; align-items: flex-start; gap: 10px; max-width: 420px; margin: 18px auto 22px; padding: 12px 14px; border-radius: 10px; color: var(--ev-dark); background: var(--soft-mint); font-size: 13px; line-height: 1.45; }
+.collab-info i { color: var(--ev); font-size: 17px; margin-top: 1px; }
+.collab-list { display: flex; flex-direction: column; gap: 8px; margin-top: 18px; }
+.collab-person { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--cream); }
+.collab-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--ev); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+.collab-email { font-size: 13px; font-weight: 700; color: var(--charcoal); word-break: break-word; }
+.collab-role { font-size: 11px; color: var(--wgray); margin-top: 2px; }
+.collab-remove { margin-left: auto; border: none; background: transparent; color: var(--wgray); cursor: pointer; font-size: 17px; padding: 4px; border-radius: 6px; }
+.collab-remove:hover { color: var(--red); background: var(--red-light); }
+.collab-empty { margin-top: 18px; padding: 14px; border-radius: 12px; background: var(--cream); color: var(--wgray); font-size: 13px; text-align: center; }
+
+/* ── SIDEBAR NAV TABS ── */
+.sidebar-nav { display: flex; gap: 4px; margin-bottom: 16px; background: rgba(0,0,0,0.04); border-radius: 10px; padding: 3px; }
+.snav-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 4px; border-radius: 8px; border: none; background: none; font-size: 12px; font-weight: 600; color: var(--wgray); cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif; transition: all var(--transition); }
+.snav-btn.active { background: var(--white); color: var(--charcoal); box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.snav-btn i { font-size: 15px; }
+.settings-context { background: var(--soft-mint); border: 1px solid rgba(13,124,102,0.18); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; }
+.settings-context-title { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700; color: var(--ev-dark); margin-bottom: 3px; }
+.settings-context-sub { font-size: 11px; color: var(--slate); line-height: 1.4; }
+.setting-toggle-item { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 10px; transition: opacity var(--transition), filter var(--transition); }
+.setting-toggle-item.settings-disabled { opacity: 0.55; filter: grayscale(0.1); }
+.setting-toggle-item.settings-disabled .toggle-slider { cursor: not-allowed; }
+.setting-toggle-item.settings-disabled input, .setting-toggle-item.settings-disabled select { cursor: not-allowed; }
+.sti-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.sti-title { font-size: 13px; font-weight: 600; color: var(--charcoal); display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+.sti-title i { font-size: 15px; color: var(--ev); }
+.sti-sub { font-size: 11px; color: var(--wgray); line-height: 1.4; max-width: 160px; }
+.sti-extra { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+.sti-extra label { font-size: 12px; color: var(--wgray); }
+.sti-extra input { width: 80px; padding: 6px 10px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--cream); font-size: 13px; font-family: 'Plus Jakarta Sans', sans-serif; color: var(--charcoal); outline: none; }
+.sti-extra input:focus { border-color: var(--ev); }
+.toggle-switch { position: relative; display: inline-block; width: 40px; height: 22px; flex-shrink: 0; margin-top: 2px; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; cursor: pointer; inset: 0; background: #D1D8E0; border-radius: 22px; transition: background var(--transition); }
+.toggle-slider::before { content: ''; position: absolute; height: 16px; width: 16px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: transform var(--transition); }
+.toggle-switch input:checked + .toggle-slider { background: var(--ev); }
+.toggle-switch input:disabled + .toggle-slider { background: #DDE3EA; }
+.toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
+  .editor { padding: 20px 16px; }
+  .settings-row { flex-direction: column; }
+  .collab-row { grid-template-columns: 1fr; }
+  .modal { padding: 22px; margin: 0; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <svg width="24" height="24" viewBox="0 0 60 60" style="flex-shrink:0;">
+    <g transform="translate(5,3)">
+      <path d="M10 52 L30 42 L50 52" fill="none" stroke="#0D7C66" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M10 52 L10 18 Q10 14 14 14 L26 14 Q30 14 30 18 L30 42" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M50 52 L50 18 Q50 14 46 14 L34 14 Q30 14 30 18 L30 42" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M30 28 Q30 12 20 4" fill="none" stroke="#F9B234" stroke-width="2" stroke-linecap="round"/>
+      <path d="M30 28 Q30 12 40 4" fill="none" stroke="#F9B234" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="20" cy="2" r="2" fill="#F9B234"/>
+      <circle cx="40" cy="2" r="2" fill="#F9B234"/>
+    </g>
+  </svg>
+  <span class="header-logo">Lectis <span>Academy</span></span>
+  <span class="header-tag">Admin — Quiz Builder</span>
+  <div class="header-spacer"></div>
+  <button class="header-btn" onclick="openNewQuizModal()">
+    <i class="ti ti-plus" aria-hidden="true"></i> New quiz
+  </button>
+</div>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+
+    <div class="sidebar-nav">
+      <button class="snav-btn active" id="snav-builder" onclick="switchTab('builder')"><i class="ti ti-notebook" aria-hidden="true"></i> Builder</button>
+      <button class="snav-btn" id="snav-settings" onclick="switchTab('settings')"><i class="ti ti-settings" aria-hidden="true"></i> Settings</button>
+    </div>
+
+    <div id="tab-builder">
+      <div class="sidebar-label">Your quizzes</div>
+      <div id="quiz-list"></div>
+      <div class="sidebar-label">Workspace</div>
+      <div class="quiz-item" onclick="openCollaboratorModal()">
+        <div class="quiz-item-icon"><i class="ti ti-users" aria-hidden="true"></i></div>
+        <div>
+          <div class="quiz-item-name">Collaborators</div>
+          <div class="quiz-item-count">Invite editors</div>
+        </div>
+        <i class="ti ti-chevron-right quiz-item-arrow" aria-hidden="true"></i>
+      </div>
+      <button class="new-quiz-btn" onclick="openNewQuizModal()">
+        <i class="ti ti-plus" aria-hidden="true"></i> New quiz
+      </button>
+    </div>
+
+    <div id="tab-settings" style="display:none;">
+      <div class="sidebar-label" style="margin-top:0;">Control</div>
+
+      <div class="settings-context" id="settings-context">
+        <div class="settings-context-title"><i class="ti ti-lock" aria-hidden="true"></i> No quiz selected</div>
+        <div class="settings-context-sub">Create or select a quiz before changing settings.</div>
+      </div>
+
+      <div class="setting-toggle-item">
+        <div class="sti-header">
+          <div>
+            <div class="sti-title"><i class="ti ti-clock" aria-hidden="true"></i> Duration</div>
+            <div class="sti-sub">Set a time limit for the quiz</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="s-duration" onchange="saveSetting('duration', this.checked); toggleDuration(this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="sti-extra" id="duration-wrap" style="display:none;">
+          <label>Minutes</label>
+          <input type="number" id="s-duration-val" value="20" min="5" max="180" onchange="saveSetting('durationMins', this.value)">
+        </div>
+      </div>
+
+      <div class="setting-toggle-item">
+        <div class="sti-header">
+          <div>
+            <div class="sti-title"><i class="ti ti-repeat" aria-hidden="true"></i> Multiple attempts</div>
+            <div class="sti-sub">Allow tutors to retake the quiz</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="s-attempts" onchange="saveSetting('multipleAttempts', this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="setting-toggle-item">
+        <div class="sti-header">
+          <div>
+            <div class="sti-title"><i class="ti ti-clipboard-off" aria-hidden="true"></i> Restrict pasting</div>
+            <div class="sti-sub">Prevent pasting into answer fields</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="s-nopaste" onchange="saveSetting('restrictPaste', this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="setting-toggle-item">
+        <div class="sti-header">
+          <div>
+            <div class="sti-title"><i class="ti ti-arrows-shuffle" aria-hidden="true"></i> Shuffle questions</div>
+            <div class="sti-sub">Show questions in a random order</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="s-shuffle" onchange="saveSetting('shuffleQuestions', this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="setting-toggle-item">
+        <div class="sti-header">
+          <div>
+            <div class="sti-title"><i class="ti ti-eye-check" aria-hidden="true"></i> Show score after submit</div>
+            <div class="sti-sub">Let tutors see their score instantly</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="s-score" onchange="saveSetting('showScore', this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="setting-toggle-item">
+        <div class="sti-header">
+          <div>
+            <div class="sti-title"><i class="ti ti-award" aria-hidden="true"></i> Passing score</div>
+            <div class="sti-sub">Set the minimum pass percentage</div>
+          </div>
+        </div>
+        <div class="sti-extra" style="border-top:none;padding-top:10px;margin-top:0;">
+          <label>Percent</label>
+          <input type="number" id="s-pass-score" value="70" min="0" max="100" onchange="saveSetting('passingScore', this.value)">
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MAIN EDITOR -->
+  <div class="editor" id="editor">
+    <div class="empty-state" id="empty-state">
+      <i class="ti ti-notebook empty-icon" aria-hidden="true"></i>
+      <div class="empty-title">No quiz selected</div>
+      <p class="empty-sub">Create a new quiz or select one from the sidebar to start editing.</p>
+      <button class="btn-primary" onclick="openNewQuizModal()"><i class="ti ti-plus" aria-hidden="true"></i> Create your first quiz</button>
+    </div>
+
+    <div id="quiz-editor" style="display:none;">
+
+      <div class="editor-header">
+        <div class="editor-title-wrap">
+          <input class="editor-title-input" id="quiz-title" placeholder="Quiz title..." oninput="saveCurrentQuiz()">
+          <div class="editor-meta">
+            <div class="meta-pill"><i class="ti ti-books" style="font-size:14px;" aria-hidden="true"></i> <span id="meta-subject">—</span></div>
+            <div class="meta-pill"><i class="ti ti-clock" style="font-size:14px;" aria-hidden="true"></i> <span id="meta-time">20 mins</span></div>
+            <div class="meta-pill"><i class="ti ti-list-numbers" style="font-size:14px;" aria-hidden="true"></i> <span id="meta-count">0 questions</span></div>
+          </div>
+        </div>
+        <div class="editor-actions">
+          <button class="btn-outline" onclick="deleteCurrentQuiz()"><i class="ti ti-trash" aria-hidden="true"></i></button>
+        </div>
+      </div>
+
+      <!-- Share link -->
+      <div class="share-box">
+        <i class="ti ti-link" style="font-size:18px; color:var(--ev); flex-shrink:0;" aria-hidden="true"></i>
+        <div class="share-link" id="share-link">—</div>
+        <button class="share-copy-btn" onclick="copyLink()"><i class="ti ti-copy" aria-hidden="true"></i> Copy link</button>
+      </div>
+
+      <!-- Settings -->
+      <div class="settings-row">
+        <div class="setting-card">
+          <label>Subject</label>
+          <select id="setting-subject" onchange="saveCurrentQuiz()">
+            <option value="Mathematics">Mathematics</option>
+            <option value="Physics">Physics</option>
+            <option value="Chemistry">Chemistry</option>
+            <option value="Biology">Biology</option>
+            <option value="Computer Science">Computer Science</option>
+            <option value="English">English</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="setting-card">
+          <label>Admin email (results to)</label>
+          <input type="email" id="setting-email" placeholder="admin@lectisacademy.com" onchange="saveCurrentQuiz()">
+        </div>
+      </div>
+
+      <!-- Questions -->
+      <div class="questions-list" id="questions-list"></div>
+
+      <!-- Add question buttons -->
+      <div class="add-q-row">
+        <button class="add-q-btn" onclick="addQuestion('mcq')">
+          <i class="ti ti-list-check" aria-hidden="true"></i> Add MCQ
+        </button>
+        <button class="add-q-btn" onclick="addQuestion('written')">
+          <i class="ti ti-pencil" aria-hidden="true"></i> Add written question
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- NEW QUIZ MODAL -->
+<div class="modal-backdrop" id="new-quiz-modal">
+  <div class="modal">
+    <div class="modal-title">Create new quiz</div>
+    <div class="modal-sub">Set a title and subject to get started.</div>
+    <div class="field">
+      <label>Quiz title</label>
+      <input type="text" id="new-quiz-title" placeholder="e.g. Mathematics Screening">
+    </div>
+    <div class="field">
+      <label>Subject</label>
+      <select id="new-quiz-subject">
+        <option value="Mathematics">Mathematics</option>
+        <option value="Physics">Physics</option>
+        <option value="Chemistry">Chemistry</option>
+        <option value="Biology">Biology</option>
+        <option value="Computer Science">Computer Science</option>
+        <option value="English">English</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="createQuiz()"><i class="ti ti-plus" aria-hidden="true"></i> Create quiz</button>
+    </div>
+  </div>
+</div>
+
+<!-- COLLABORATOR MODAL -->
+<div class="modal-backdrop" id="collab-modal">
+  <div class="modal collab-modal">
+    <div class="modal-top">
+      <div>
+        <div class="modal-title">Add Collaborator</div>
+        <p class="modal-sub">Invite someone to help manage this quiz workspace.</p>
+      </div>
+      <button class="modal-close" onclick="closeCollaboratorModal()" aria-label="Close collaborator modal">
+        <i class="ti ti-x" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <div class="collab-row">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="collab-email" placeholder="name@example.com">
+      </div>
+      <div class="field">
+        <label>Role</label>
+        <select id="collab-role">
+          <option value="Admin">Admin</option>
+          <option value="Editor">Editor</option>
+          <option value="Viewer">Viewer</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="collab-info">
+      <i class="ti ti-info-circle" aria-hidden="true"></i>
+      <span><strong>Admin</strong> can edit the quiz and add collaborators. Backend invitations can be connected later.</span>
+    </div>
+
+    <div class="modal-actions" style="justify-content:center;">
+      <button class="btn-primary" onclick="addCollaborator()"><i class="ti ti-user-plus" aria-hidden="true"></i> Add</button>
+    </div>
+
+    <div id="collab-list" class="collab-list"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'lectis_quizzes';
+const COLLAB_STORAGE_KEY = 'lectis_collaborators';
+let quizzes = {};
+let collaborators = [];
+let currentQuizId = null;
+
+function switchTab(tab) {
+  document.getElementById('tab-builder').style.display = tab === 'builder' ? 'block' : 'none';
+  document.getElementById('tab-settings').style.display = tab === 'settings' ? 'block' : 'none';
+  document.getElementById('snav-builder').classList.toggle('active', tab === 'builder');
+  document.getElementById('snav-settings').classList.toggle('active', tab === 'settings');
+  if (tab === 'settings') loadSettingsUI();
+}
+
+function getSettingsControls() {
+  return ['s-duration', 's-duration-val', 's-attempts', 's-nopaste', 's-shuffle', 's-score', 's-pass-score']
+    .map(id => document.getElementById(id))
+    .filter(Boolean);
+}
+
+function setSettingsEnabled(enabled) {
+  getSettingsControls().forEach(control => { control.disabled = !enabled; });
+  document.querySelectorAll('#tab-settings .setting-toggle-item').forEach(item => {
+    item.classList.toggle('settings-disabled', !enabled);
+  });
+}
+
+function saveSetting(key, val) {
+  if (!currentQuizId) {
+    loadSettingsUI();
+    toast('Select or create a quiz first');
+    return;
+  }
+  if (!quizzes[currentQuizId].settings) quizzes[currentQuizId].settings = {};
+  quizzes[currentQuizId].settings[key] = val;
+  save();
+  updateMetaTime();
+}
+
+function loadSettingsUI() {
+  const context = document.getElementById('settings-context');
+  if (!currentQuizId || !quizzes[currentQuizId]) {
+    context.innerHTML = '<div class="settings-context-title"><i class="ti ti-lock" aria-hidden="true"></i> No quiz selected</div><div class="settings-context-sub">Create or select a quiz before changing settings.</div>';
+    ['s-duration', 's-attempts', 's-nopaste', 's-shuffle', 's-score'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.checked = false;
+    });
+    document.getElementById('s-duration-val').value = 20;
+    document.getElementById('s-pass-score').value = 70;
+    document.getElementById('duration-wrap').style.display = 'none';
+    setSettingsEnabled(false);
+    return;
+  }
+
+  const q = quizzes[currentQuizId];
+  const s = q.settings || {};
+  context.innerHTML = `<div class="settings-context-title"><i class="ti ti-adjustments" aria-hidden="true"></i> Settings for ${q.title || 'Untitled quiz'}</div><div class="settings-context-sub">These controls only affect the selected quiz.</div>`;
+  setSettingsEnabled(true);
+  document.getElementById('s-duration').checked = !!s.duration;
+  document.getElementById('s-duration-val').value = s.durationMins || q.time || 20;
+  document.getElementById('duration-wrap').style.display = s.duration ? 'flex' : 'none';
+  document.getElementById('s-attempts').checked = !!s.multipleAttempts;
+  document.getElementById('s-nopaste').checked = !!s.restrictPaste;
+  document.getElementById('s-shuffle').checked = !!s.shuffleQuestions;
+  document.getElementById('s-score').checked = !!s.showScore;
+  document.getElementById('s-pass-score').value = s.passingScore || 70;
+}
+
+function toggleDuration(show) {
+  document.getElementById('duration-wrap').style.display = show ? 'flex' : 'none';
+  updateMetaTime();
+}
+
+function updateMetaTime() {
+  const metaTime = document.getElementById('meta-time');
+  if (!metaTime || !currentQuizId || !quizzes[currentQuizId]) return;
+  const q = quizzes[currentQuizId];
+  const s = q.settings || {};
+  metaTime.textContent = s.duration ? `${s.durationMins || q.time || 20} mins` : 'No limit';
+}
+
+
+function load() {
+  try { quizzes = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch(e) { quizzes = {}; }
+  try { collaborators = JSON.parse(localStorage.getItem(COLLAB_STORAGE_KEY)) || []; } catch(e) { collaborators = []; }
+  renderSidebar();
+  const ids = Object.keys(quizzes);
+  if (ids.length > 0) selectQuiz(ids[0]);
+}
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(quizzes));
+}
+
+function saveCollaborators() {
+  localStorage.setItem(COLLAB_STORAGE_KEY, JSON.stringify(collaborators));
+}
+
+function openCollaboratorModal() {
+  document.getElementById('collab-email').value = '';
+  document.getElementById('collab-role').value = 'Admin';
+  renderCollaborators();
+  document.getElementById('collab-modal').classList.add('show');
+  setTimeout(() => document.getElementById('collab-email').focus(), 100);
+}
+
+function closeCollaboratorModal() {
+  document.getElementById('collab-modal').classList.remove('show');
+}
+
+function addCollaborator() {
+  const emailInput = document.getElementById('collab-email');
+  const email = emailInput.value.trim();
+  const role = document.getElementById('collab-role').value;
+  if (!email || !email.includes('@')) {
+    alert('Please enter a valid email.');
+    emailInput.focus();
+    return;
+  }
+  if (collaborators.some(person => person.email.toLowerCase() === email.toLowerCase())) {
+    alert('This collaborator is already added.');
+    emailInput.focus();
+    return;
+  }
+  collaborators.push({ email, role });
+  saveCollaborators();
+  emailInput.value = '';
+  renderCollaborators();
+  toast('Collaborator added');
+}
+
+function removeCollaborator(index) {
+  collaborators.splice(index, 1);
+  saveCollaborators();
+  renderCollaborators();
+  toast('Collaborator removed');
+}
+
+function renderCollaborators() {
+  const list = document.getElementById('collab-list');
+  if (!collaborators.length) {
+    list.innerHTML = '<div class="collab-empty">No collaborators added yet.</div>';
+    return;
+  }
+  list.innerHTML = collaborators.map((person, index) => {
+    const initials = person.email.slice(0, 2).toUpperCase();
+    return `<div class="collab-person">
+      <div class="collab-avatar">${initials}</div>
+      <div>
+        <div class="collab-email">${person.email}</div>
+        <div class="collab-role">${person.role}</div>
+      </div>
+      <button class="collab-remove" onclick="removeCollaborator(${index})" aria-label="Remove collaborator"><i class="ti ti-x" aria-hidden="true"></i></button>
+    </div>`;
+  }).join('');
+}
+
+function genId() {
+  return 'quiz_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+}
+
+function renderSidebar() {
+  const list = document.getElementById('quiz-list');
+  const ids = Object.keys(quizzes);
+  if (ids.length === 0) { list.innerHTML = '<p style="font-size:12px;color:var(--wgray);padding:8px;">No quizzes yet.</p>'; return; }
+
+  const icons = { Mathematics: 'ti-math', Physics: 'ti-atom', Chemistry: 'ti-flask', Biology: 'ti-dna', 'Computer Science': 'ti-device-laptop', English: 'ti-pencil', Other: 'ti-notebook' };
+
+  list.innerHTML = ids.map(id => {
+    const q = quizzes[id];
+    const icon = icons[q.subject] || 'ti-notebook';
+    const active = id === currentQuizId ? 'active' : '';
+    return `<div class="quiz-item ${active}" onclick="selectQuiz('${id}')">
+      <div class="quiz-item-icon"><i class="ti ${icon}" aria-hidden="true"></i></div>
+      <div>
+        <div class="quiz-item-name">${q.title || 'Untitled'}</div>
+        <div class="quiz-item-count">${(q.questions||[]).length} questions · ${q.subject}</div>
+      </div>
+      <i class="ti ti-chevron-right quiz-item-arrow" aria-hidden="true"></i>
+    </div>`;
+  }).join('');
+}
+
+function selectQuiz(id) {
+  currentQuizId = id;
+  renderSidebar();
+  renderEditor();
+  loadSettingsUI();
+}
+
+function renderEditor() {
+  const q = quizzes[currentQuizId];
+  if (!q) {
+    document.getElementById('empty-state').style.display = 'flex';
+    document.getElementById('quiz-editor').style.display = 'none';
+    loadSettingsUI();
+    return;
+  }
+
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('quiz-editor').style.display = 'block';
+
+  document.getElementById('quiz-title').value = q.title || '';
+  document.getElementById('setting-subject').value = q.subject || 'Mathematics';
+  document.getElementById('setting-email').value = q.adminEmail || '';
+  document.getElementById('meta-subject').textContent = q.subject || '—';
+  updateMetaTime();
+  document.getElementById('meta-count').textContent = (q.questions||[]).length + ' questions';
+
+  const link = window.location.origin + '/tutor-quiz.html?quiz=' + currentQuizId;
+  document.getElementById('share-link').textContent = link;
+
+  renderQuestions();
+}
+
+function renderQuestions() {
+  const q = quizzes[currentQuizId];
+  const list = document.getElementById('questions-list');
+  const letters = ['A','B','C','D'];
+
+  if (!q.questions || q.questions.length === 0) {
+    list.innerHTML = '<p style="font-size:13px;color:var(--wgray);padding:8px 0;">No questions yet. Add one below.</p>';
+    return;
+  }
+
+  list.innerHTML = q.questions.map((question, qi) => {
+    const typeBadge = question.type === 'mcq'
+      ? '<span class="q-type-badge q-type-mcq">MCQ</span>'
+      : '<span class="q-type-badge q-type-written">Written</span>';
+
+    let body = `<div class="field"><label>Question</label><textarea placeholder="Enter your question..." oninput="updateQuestion(${qi},'text',this.value)">${question.text || ''}</textarea></div>`;
+
+    if (question.type === 'mcq') {
+      body += '<div class="field"><label>Options <span style="font-weight:400;text-transform:none;letter-spacing:0;">(select the correct answer)</span></label><div class="options-editor">';
+      for (let oi = 0; oi < 4; oi++) {
+        const val = (question.options && question.options[oi]) || '';
+        const checked = question.correct === oi ? 'checked' : '';
+        const selClass = question.correct === oi ? 'selected' : '';
+        body += `<div class="option-row">
+          <div class="option-letter">${letters[oi]}</div>
+          <input type="text" placeholder="Option ${letters[oi]}..." value="${val}" oninput="updateOption(${qi},${oi},this.value)">
+          <label class="correct-radio ${selClass}">
+            <input type="radio" name="correct_${qi}" value="${oi}" ${checked} onchange="updateCorrect(${qi},${oi})"> Correct
+          </label>
+        </div>`;
+      }
+      body += '</div></div>';
+    }
+
+    return `<div class="q-card" id="qcard_${qi}">
+      <div class="q-card-header">
+        <span class="q-num">Q${qi+1}</span>
+        ${typeBadge}
+        <div class="q-card-actions">
+          ${qi > 0 ? `<button class="q-icon-btn" onclick="moveQuestion(${qi},-1)" title="Move up"><i class="ti ti-arrow-up" aria-hidden="true"></i></button>` : ''}
+          ${qi < q.questions.length-1 ? `<button class="q-icon-btn" onclick="moveQuestion(${qi},1)" title="Move down"><i class="ti ti-arrow-down" aria-hidden="true"></i></button>` : ''}
+          <button class="q-icon-btn danger" onclick="deleteQuestion(${qi})" title="Delete"><i class="ti ti-trash" aria-hidden="true"></i></button>
+        </div>
+      </div>
+      ${body}
+    </div>`;
+  }).join('');
+}
+
+function saveCurrentQuiz() {
+  if (!currentQuizId) return;
+  const q = quizzes[currentQuizId];
+  q.title = document.getElementById('quiz-title').value;
+  q.subject = document.getElementById('setting-subject').value;
+  q.adminEmail = document.getElementById('setting-email').value;
+  document.getElementById('meta-subject').textContent = q.subject;
+  updateMetaTime();
+  save();
+  renderSidebar();
+  loadSettingsUI();
+}
+
+function addQuestion(type) {
+  const q = quizzes[currentQuizId];
+  if (!q.questions) q.questions = [];
+  q.questions.push({ type, text: '', options: ['','','',''], correct: 0 });
+  document.getElementById('meta-count').textContent = q.questions.length + ' questions';
+  save();
+  renderSidebar();
+  renderQuestions();
+  setTimeout(() => {
+    const cards = document.querySelectorAll('.q-card');
+    if (cards.length) cards[cards.length-1].scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 100);
+}
+
+function updateQuestion(qi, field, val) {
+  quizzes[currentQuizId].questions[qi][field] = val;
+  save();
+}
+
+function updateOption(qi, oi, val) {
+  if (!quizzes[currentQuizId].questions[qi].options) quizzes[currentQuizId].questions[qi].options = ['','','',''];
+  quizzes[currentQuizId].questions[qi].options[oi] = val;
+  save();
+}
+
+function updateCorrect(qi, oi) {
+  quizzes[currentQuizId].questions[qi].correct = oi;
+  document.querySelectorAll(`[name="correct_${qi}"]`).forEach((r, i) => {
+    r.parentElement.classList.toggle('selected', i === oi);
+  });
+  save();
+}
+
+function moveQuestion(qi, dir) {
+  const qs = quizzes[currentQuizId].questions;
+  const target = qi + dir;
+  if (target < 0 || target >= qs.length) return;
+  [qs[qi], qs[target]] = [qs[target], qs[qi]];
+  save();
+  renderQuestions();
+}
+
+function deleteQuestion(qi) {
+  quizzes[currentQuizId].questions.splice(qi, 1);
+  document.getElementById('meta-count').textContent = quizzes[currentQuizId].questions.length + ' questions';
+  save();
+  renderSidebar();
+  renderQuestions();
+  toast('Question deleted');
+}
+
+function deleteCurrentQuiz() {
+  if (!currentQuizId) return;
+  if (!confirm('Delete this quiz? This cannot be undone.')) return;
+  delete quizzes[currentQuizId];
+  currentQuizId = null;
+  save();
+  renderSidebar();
+  document.getElementById('empty-state').style.display = 'flex';
+  document.getElementById('quiz-editor').style.display = 'none';
+  toast('Quiz deleted');
+}
+
+function openNewQuizModal() {
+  document.getElementById('new-quiz-title').value = '';
+  document.getElementById('new-quiz-modal').classList.add('show');
+  setTimeout(() => document.getElementById('new-quiz-title').focus(), 100);
+}
+
+function closeModal() {
+  document.getElementById('new-quiz-modal').classList.remove('show');
+}
+
+function createQuiz() {
+  const title = document.getElementById('new-quiz-title').value.trim();
+  const subject = document.getElementById('new-quiz-subject').value;
+  if (!title) { alert('Please enter a title.'); return; }
+  const id = genId();
+  quizzes[id] = { title, subject, time: 20, adminEmail: '', questions: [] };
+  save();
+  closeModal();
+  renderSidebar();
+  selectQuiz(id);
+  toast('Quiz created!');
+}
+
+function copyLink() {
+  const link = window.location.origin + '/tutor-quiz.html?quiz=' + currentQuizId;
+  navigator.clipboard.writeText(link).then(() => toast('Link copied!'));
+}
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.innerHTML = '<i class="ti ti-check" aria-hidden="true"></i> ' + msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+document.getElementById('new-quiz-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+document.getElementById('collab-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeCollaboratorModal();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeModal();
+    closeCollaboratorModal();
+  }
+});
+
+load();
+</script>
+</body>
+</html>
