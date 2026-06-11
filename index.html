@@ -839,9 +839,73 @@ function createQuiz() {
 }
 
 function copyLink() {
-  const link = window.location.origin + '/tutor-quiz.html?quiz=' + currentQuizId;
-  navigator.clipboard.writeText(link).then(() => toast('Link copied!'));
+  if (!currentQuizId) {
+    toast('Please select a quiz first.');
+    return;
+  }
+
+  const q = quizzes[currentQuizId];
+  if (!q) {
+    toast('Quiz data not found.');
+    return;
+  }
+
+  try {
+    // 1. Robust Encoding (Handles special chars)
+    const jsonString = JSON.stringify(q);
+    const encodedData = btoa(unescape(encodeURIComponent(jsonString)));
+    
+    // 2. Build the Link
+    const link = window.location.origin + '/tutor-quiz.html?data=' + encodedData;
+
+    // 3. Intelligent Copy Logic (Fixes the "Undefined" error)
+    
+    // Check if the modern Clipboard API is available (Only works on HTTPS or Localhost)
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(link)
+        .then(() => toast('Magic link copied!'))
+        .catch(err => {
+          console.error('Clipboard failed', err);
+          copyToClipboardFallback(link); // Fallback if permission denied
+        });
+    } else {
+      // Fallback for local files (file://) or insecure contexts
+      copyToClipboardFallback(link);
+    }
+
+  } catch (e) {
+    console.error('Encoding Error:', e);
+    alert('Error generating link: ' + e.message);
+  }
 }
+
+// Helper function for local files
+function copyToClipboardFallback(text) {
+  const textArea = document.createElement("textarea");
+  textArea.value = text;
+  
+  // Ensure the textarea is not visible but exists in the DOM
+  textArea.style.position = "fixed";
+  textArea.style.left = "-9999px";
+  document.body.appendChild(textArea);
+  
+  textArea.focus();
+  textArea.select();
+  
+  try {
+    const successful = document.execCommand('copy');
+    if (successful) {
+      toast('Magic link copied! (Legacy Mode)');
+    } else {
+      prompt('Copy this link manually:', text);
+    }
+  } catch (err) {
+    prompt('Copy this link manually:', text);
+  }
+  
+  document.body.removeChild(textArea);
+}
+
 
 let toastTimer;
 function toast(msg) {
