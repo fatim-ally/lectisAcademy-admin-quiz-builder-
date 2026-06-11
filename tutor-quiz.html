@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lectis Academy — Assessment</title>
+<!-- Fonts and Icons matching the Admin theme -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+
+<style>
+/* ── RESET & VARIABLES (Matching Admin Theme) ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --ev: #0D7C66; --ev-dark: #095A4A; --mint: #40B89C; --sun: #F9B234;
+  --cream: #FEFAF3; --charcoal: #1A2332; --slate: #3D4F5F; --wgray: #8896A4;
+  --soft-mint: #E8F5F0; --white: #ffffff; --border: rgba(0,0,0,0.08);
+  --red: #e74c3c; --red-light: rgba(231,76,60,0.08);
+  --transition: 0.2s ease;
+  --font-head: 'DM Serif Display', serif;
+  --font-body: 'Plus Jakarta Sans', sans-serif;
+}
+html, body { min-height: 100%; font-family: var(--font-body); background: var(--cream); color: var(--charcoal); line-height: 1.6; }
+
+/* ── UTILITIES ── */
+.hidden { display: none !important; }
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.container { max-width: 800px; margin: 0 auto; padding: 20px; }
+
+/* ── HEADER ── */
+.page-header {
+  background: var(--white); border-bottom: 1px solid var(--border);
+  padding: 16px 0; position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+}
+.header-content {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; padding: 0 24px; max-width: 1000px; margin: 0 auto;
+}
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.brand-logo { width: 32px; height: 32px; }
+.brand-name { font-family: var(--font-head); font-size: 20px; color: var(--charcoal); }
+.brand-name span { color: var(--sun); }
+
+/* Timer Badge */
+.timer-badge {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--charcoal); color: #fff;
+  padding: 8px 16px; border-radius: 50px;
+  font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums;
+}
+.timer-badge.warning { background: var(--sun); color: var(--charcoal); animation: pulse 2s infinite; }
+.timer-badge.danger { background: var(--red); }
+
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
+
+/* ── INTRO MODAL ── */
+.intro-overlay {
+  position: fixed; inset: 0; background: var(--cream); z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.intro-card {
+  background: var(--white); width: 100%; max-width: 460px;
+  border-radius: 20px; padding: 40px; box-shadow: 0 20px 60px rgba(26,35,50,0.1);
+  text-align: center;
+}
+.intro-logo { width: 64px; height: 64px; margin-bottom: 16px; color: var(--ev); }
+.intro-title { font-family: var(--font-head); font-size: 28px; margin-bottom: 8px; }
+.intro-desc { font-size: 14px; color: var(--slate); margin-bottom: 32px; }
+
+/* Form Elements */
+.form-group { text-align: left; margin-bottom: 20px; }
+.form-label { display: block; font-size: 12px; font-weight: 700; color: var(--wgray); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+.form-input {
+  width: 100%; padding: 14px 16px; border-radius: 12px;
+  border: 1.5px solid var(--border); background: var(--cream);
+  font-size: 15px; font-family: var(--font-body); color: var(--charcoal);
+  outline: none; transition: all var(--transition);
+}
+.form-input:focus { border-color: var(--ev); background: #fff; box-shadow: 0 0 0 4px rgba(13,124,102,0.1); }
+.form-input[readonly] { background: var(--soft-mint); color: var(--ev-dark); cursor: default; font-weight: 600; }
+
+.btn-start {
+  width: 100%; padding: 16px; border: none; border-radius: 12px;
+  background: var(--ev); color: #fff; font-size: 16px; font-weight: 700;
+  font-family: var(--font-body); cursor: pointer; transition: background var(--transition);
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+.btn-start:hover { background: var(--ev-dark); }
+
+/* ── QUIZ CONTENT ── */
+.quiz-info {
+  margin-bottom: 32px; text-align: center;
+  padding: 30px; background: var(--white); border-radius: 16px;
+  border: 1px solid var(--border);
+}
+.quiz-subject { color: var(--ev); font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.quiz-title { font-family: var(--font-head); font-size: 32px; color: var(--charcoal); margin-bottom: 12px; }
+.quiz-instructions { color: var(--slate); font-size: 14px; max-width: 600px; margin: 0 auto; }
+
+/* Question Card */
+.q-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 16px; padding: 28px; margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  transition: transform 0.2s ease;
+}
+.q-card:hover { border-color: rgba(13,124,102,0.2); }
+.q-header { display: flex; gap: 12px; margin-bottom: 20px; }
+.q-num { 
+  font-family: var(--font-head); font-size: 24px; color: var(--ev); 
+  min-width: 30px; 
+}
+.q-text { font-size: 18px; font-weight: 600; color: var(--charcoal); line-height: 1.5; }
+
+/* MCQ Options */
+.options-grid { display: grid; gap: 12px; margin-left: 42px; }
+.option-label {
+  display: flex; align-items: center; gap: 12px; padding: 16px;
+  border: 1.5px solid var(--border); border-radius: 10px;
+  cursor: pointer; transition: all var(--transition);
+  background: var(--cream);
+}
+.option-label:hover { border-color: var(--mint); background: #fff; }
+.option-label.selected { border-color: var(--ev); background: var(--soft-mint); box-shadow: 0 0 0 1px var(--ev); }
+.option-radio { display: none; }
+.option-circle {
+  width: 20px; height: 20px; border: 2px solid var(--slate); border-radius: 50%;
+  flex-shrink: 0; position: relative;
+}
+.option-label.selected .option-circle { border-color: var(--ev); background: var(--ev); }
+.option-label.selected .option-circle::after {
+  content: ''; position: absolute; inset: 4px; background: #fff; border-radius: 50%;
+}
+.option-text { font-weight: 500; color: var(--slate); }
+.option-label.selected .option-text { color: var(--charcoal); font-weight: 600; }
+
+/* Written Input */
+.written-input {
+  width: 100%; min-height: 120px; padding: 16px; border: 1.5px solid var(--border);
+  border-radius: 12px; background: var(--cream); font-family: var(--font-body);
+  font-size: 16px; resize: vertical; outline: none; transition: all var(--transition);
+  margin-left: 42px;
+}
+.written-input:focus { border-color: var(--ev); background: #fff; box-shadow: 0 0 0 3px rgba(13,124,102,0.1); }
+
+/* Footer Actions */
+.quiz-footer {
+  margin-top: 40px; text-align: center;
+}
+.btn-submit {
+  background: var(--charcoal); color: #fff; padding: 16px 40px;
+  border-radius: 12px; border: none; font-size: 16px; font-weight: 700;
+  cursor: pointer; transition: transform 0.2s, background 0.2s;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.btn-submit:hover { background: var(--slate); transform: translateY(-2px); }
+
+/* ── RESULTS / SUBMISSION ── */
+.submission-overlay {
+  position: fixed; inset: 0; background: rgba(26,35,50,0.8); z-index: 500;
+  display: none; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.submission-overlay.active { display: flex; }
+.loading-spinner {
+  width: 50px; height: 50px; border: 4px solid var(--soft-mint);
+  border-top-color: var(--ev); border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.success-modal {
+  background: var(--white); width: 100%; max-width: 500px;
+  border-radius: 20px; padding: 40px; text-align: center;
+  transform: translateY(20px); opacity: 0; transition: all 0.4s ease;
+}
+.success-modal.show { transform: translateY(0); opacity: 1; }
+.success-icon { 
+  width: 80px; height: 80px; background: var(--soft-mint); color: var(--ev);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 40px; margin: 0 auto 24px;
+}
+.result-stats {
+  display: flex; justify-content: center; gap: 24px; margin: 24px 0;
+  padding: 20px; background: var(--cream); border-radius: 12px;
+}
+.stat-box h4 { font-size: 11px; text-transform: uppercase; color: var(--wgray); letter-spacing: 1px; }
+.stat-box div { font-family: var(--font-head); font-size: 28px; color: var(--charcoal); }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--charcoal); color: #fff; padding: 12px 24px;
+  border-radius: 50px; font-size: 14px; opacity: 0; pointer-events: none;
+  transition: all 0.3s ease; z-index: 1000; display: flex; align-items: center; gap: 8px;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .header-content { padding: 0 16px; }
+  .timer-badge span { display: none; } /* Hide "Time Left" text on small screens */
+  .timer-badge::after { content: attr(data-time); } /* Show time via attribute */
+  .option-label { padding: 12px; }
+  .intro-card { padding: 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- INTRO / LOGIN SECTION -->
+<div id="intro-section" class="intro-overlay">
+  <div class="intro-card">
+    <svg class="intro-logo" viewBox="0 0 60 60" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 52 L30 42 L50 52" />
+      <path d="M10 52 L10 18 Q10 14 14 14 L26 14 Q30 14 30 18 L30 42" />
+      <path d="M50 52 L50 18 Q50 14 46 14 L34 14 Q30 14 30 18 L30 42" />
+      <path d="M30 28 Q30 12 20 4" />
+      <path d="M30 28 Q30 12 40 4" />
+      <circle cx="20" cy="2" r="2" fill="currentColor"/>
+      <circle cx="40" cy="2" r="2" fill="currentColor"/>
+    </svg>
+    <h1 class="intro-title">Ready to begin?</h1>
+    <p class="intro-desc">Please confirm your details to start the assessment.</p>
+    
+    <div class="form-group">
+      <label class="form-label">Full Name</label>
+      <input type="text" id="user-name" class="form-input" placeholder="e.g. Alex Johnson">
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">Email Address</label>
+      <input type="email" id="user-email" class="form-input" placeholder="alex@example.com">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Subject</label>
+      <input type="text" id="user-subject" class="form-input" readonly>
+    </div>
+
+    <button class="btn-start" onclick="startQuiz()">
+      Start Assessment <i class="ti ti-arrow-right"></i>
+    </button>
+  </div>
+</div>
+
+<!-- MAIN QUIZ INTERFACE (Hidden initially) -->
+<div id="quiz-interface" class="hidden">
+  
+  <header class="page-header">
+    <div class="header-content">
+      <a href="#" class="brand">
+        <svg width="32" height="32" viewBox="0 0 60 60" fill="none">
+          <g stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 52 L30 42 L50 52" stroke="#0D7C66"/>
+            <path d="M10 52 L10 18 Q10 14 14 14 L26 14 Q30 14 30 18 L30 42" stroke="#fff"/>
+            <path d="M50 52 L50 18 Q50 14 46 14 L34 14 Q30 14 30 18 L30 42" stroke="#fff"/>
+            <path d="M30 28 Q30 12 20 4" stroke="#F9B234"/>
+            <path d="M30 28 Q30 12 40 4" stroke="#F9B234"/>
+            <circle cx="20" cy="2" r="2" fill="#F9B234"/>
+            <circle cx="40" cy="2" r="2" fill="#F9B234"/>
+          </g>
+        </svg>
+        <span class="brand-name">Lectis <span>Academy</span></span>
+      </a>
+
+      <!-- Timer -->
+      <div class="timer-badge" id="timer-display">
+        <i class="ti ti-clock"></i> <span>Time Left:</span> <b id="time-val">00:00</b>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    
+    <!-- Info Block -->
+    <div class="quiz-info">
+      <div class="quiz-subject" id="display-subject">Subject</div>
+      <h2 class="quiz-title" id="display-title">Quiz Title</h2>
+      <p class="quiz-instructions">Answer the following questions to the best of your ability. Ensure you have a stable internet connection before submitting.</p>
+    </div>
+
+    <!-- Questions List -->
+    <div id="questions-container">
+      <!-- Questions injected via JS -->
+    </div>
+
+    <!-- Footer -->
+    <div class="quiz-footer">
+      <button class="btn-submit" onclick="submitQuiz()">
+        Submit Answers <i class="ti ti-send"></i>
+      </button>
+    </div>
+
+  </main>
+</div>
+
+<!-- SUBMISSION OVERLAY -->
+<div class="submission-overlay" id="submission-overlay">
+  <!-- Loading State -->
+  <div id="loading-state" style="text-align:center; color:#fff;">
+    <div class="loading-spinner" style="margin: 0 auto 20px;"></div>
+    <h3>Submitting Assessment...</h3>
+    <p style="opacity:0.8; font-size:14px;">Please do not close this window.</p>
+  </div>
+
+  <!-- Success State -->
+  <div class="success-modal" id="success-state">
+    <div class="success-icon">
+      <i class="ti ti-check"></i>
+    </div>
+    <h2 style="font-family: var(--font-head); margin-bottom: 8px;">Assessment Complete!</h2>
+    <p style="color: var(--slate);">Your answers have been securely sent to the admin team.</p>
+
+    <div class="result-stats" id="result-stats">
+      <!-- Score injected here if enabled -->
+    </div>
+
+    <p style="font-size:13px; color:var(--wgray); margin-top:20px;">
+      A confirmation has been sent to <span id="result-email" style="color:var(--charcoal); font-weight:600;"></span>
+    </p>
+    
+    <button class="btn-start" style="margin-top:24px; background:var(--slate);" onclick="window.location.href=''">
+      Back to Home
+    </button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG & STATE ──
+const STORAGE_KEY = 'lectis_quizzes';
+let quizData = null;
+let timerInterval = null;
+let totalSeconds = 0;
+let userAnswers = {}; // Map: questionIndex -> answerValue
+let currentQuizId = null;
+
+// ── INITIALIZATION ──
+// ── INITIALIZATION ──
+document.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  
+  // 1. PRIORITY: Check if the link contains the data directly
+  const dataStr = params.get('data');
+
+  if (dataStr) {
+    try {
+      // Decode the data from Base64 back to a usable object
+      // Note: We use decodeURIComponent to reverse the encoding from the Admin
+      const jsonStr = decodeURIComponent(atob(dataStr));
+      quizData = JSON.parse(jsonStr);
+      
+      // Auto-fill the subject
+      if(document.getElementById('user-subject')) {
+        document.getElementById('user-subject').value = quizData.subject || 'General Assessment';
+      }
+      
+      console.log("Quiz loaded from link data.");
+      return; // Stop here, we have the quiz!
+    } catch (e) {
+      console.error("Data decode error", e);
+      // If the link is corrupted, fall through to the error message
+    }
+  }
+
+  // 2. FALLBACK: Old method (ID & LocalStorage) - Only works if on same computer
+  const quizId = params.get('quiz');
+
+  if (!quizId) {
+    showError('No Quiz ID provided. Please use the "Copy Link" button from the Admin page.');
+    return;
+  }
+
+  loadQuiz(quizId);
+});
+
+function loadQuiz(id) {
+  try {
+    const quizzes = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+    quizData = quizzes[id];
+
+    if (!quizData) {
+      showError('Quiz not found. It may have been deleted.');
+      return;
+    }
+
+    // Pre-fill Subject
+    document.getElementById('user-subject').value = quizData.subject || 'General Assessment';
+
+  } catch (e) {
+    console.error(e);
+    showError('Error loading quiz data.');
+  }
+}
+
+function showError(msg) {
+  const intro = document.getElementById('intro-section');
+  intro.innerHTML = `
+    <div class="intro-card" style="color:var(--red);">
+      <i class="ti ti-alert-circle" style="font-size:48px; margin-bottom:16px;"></i>
+      <h2 class="intro-title">Error</h2>
+      <p class="intro-desc">${msg}</p>
+    </div>
+  `;
+}
+
+// ── QUIZ FLOW ──
+
+function startQuiz() {
+  const name = document.getElementById('user-name').value.trim();
+  const email = document.getElementById('user-email').value.trim();
+
+  if (!name || !email) {
+    showToast('Please enter your name and email.', 'error');
+    if(!name) document.getElementById('user-name').focus();
+    else document.getElementById('user-email').focus();
+    return;
+  }
+
+  // Store user info
+  quizData.user = { name, email };
+
+  // Setup UI
+  document.getElementById('intro-section').style.display = 'none';
+  document.getElementById('quiz-interface').classList.remove('hidden');
+
+  // Render Header Info
+  document.getElementById('display-subject').textContent = quizData.subject;
+  document.getElementById('display-title').textContent = quizData.title;
+
+  // Render Questions
+  renderQuestions();
+
+  // Start Timer
+  initTimer();
+}
+
+function renderQuestions() {
+  const container = document.getElementById('questions-container');
+  container.innerHTML = '';
+
+  // Check for shuffle setting
+  let questions = quizData.questions ? [...quizData.questions] : [];
+  if (quizData.settings && quizData.settings.shuffleQuestions) {
+    questions = questions.sort(() => Math.random() - 0.5);
+  }
+
+  if (questions.length === 0) {
+    container.innerHTML = '<p style="text-align:center; color:var(--wgray);">No questions found in this quiz.</p>';
+    return;
+  }
+
+  questions.forEach((q, index) => {
+    const card = document.createElement('div');
+    card.className = 'q-card';
+    
+    // Header
+    let html = `
+      <div class="q-header">
+        <div class="q-num">Q${index + 1}</div>
+        <div class="q-text">${escapeHtml(q.text)}</div>
+      </div>
+    `;
+
+    // Content based on type
+    if (q.type === 'mcq') {
+      html += '<div class="options-grid">';
+      q.options.forEach((opt, optIndex) => {
+        html += `
+          <label class="option-label" onclick="selectOption(this, ${index}, ${optIndex})">
+            <input type="radio" name="q_${index}" class="option-radio" value="${optIndex}">
+            <div class="option-circle"></div>
+            <span class="option-text">${escapeHtml(opt)}</span>
+          </label>
+        `;
+      });
+      html += '</div>';
+    } else {
+      // Written
+      html += `<textarea class="written-input" placeholder="Type your answer here..." oninput="saveWritten(${index}, this.value)"></textarea>`;
+    }
+
+    card.innerHTML = html;
+    container.appendChild(card);
+  });
+}
+
+// ── ANSWER HANDLING ──
+
+function selectOption(label, qIndex, optIndex) {
+  // Visual update
+  const parent = label.parentElement;
+  parent.querySelectorAll('.option-label').forEach(el => el.classList.remove('selected'));
+  label.classList.add('selected');
+  
+  // Logic update
+  userAnswers[qIndex] = optIndex;
+}
+
+function saveWritten(qIndex, value) {
+  userAnswers[qIndex] = value;
+}
+
+// ── TIMER LOGIC ──
+
+function initTimer() {
+  const settings = quizData.settings || {};
+  const minutes = settings.durationMins || quizData.time || 20; // Fallback to legacy time or default 20
+  
+  // If duration setting is explicitly false, don't show timer
+  if (settings.duration === false) {
+    document.getElementById('timer-display').style.display = 'none';
+    return;
+  }
+
+  totalSeconds = minutes * 60;
+  updateTimerDisplay();
+
+  timerInterval = setInterval(() => {
+    totalSeconds--;
+    updateTimerDisplay();
+
+    if (totalSeconds <= 0) {
+      clearInterval(timerInterval);
+      submitQuiz(true); // Auto submit
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  const timeStr = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  
+  const badge = document.getElementById('timer-display');
+  const valEl = document.getElementById('time-val');
+  
+  valEl.textContent = timeStr;
+  badge.setAttribute('data-time', timeStr); // For responsive CSS
+
+  if (totalSeconds < 60) badge.classList.add('danger');
+  else if (totalSeconds < 300) badge.classList.add('warning');
+}
+
+// ── SUBMISSION ──
+
+function submitQuiz(auto = false) {
+  if (!auto) {
+    const answeredCount = Object.keys(userAnswers).length;
+    const totalQ = quizData.questions.length;
+    if (answeredCount < totalQ) {
+      const confirmSubmit = confirm(`You have only answered ${answeredCount} of ${totalQ} questions. Are you sure you want to submit?`);
+      if (!confirmSubmit) return;
+    }
+  }
+
+  clearInterval(timerInterval);
+
+  // Show Overlay
+  const overlay = document.getElementById('submission-overlay');
+  const loading = document.getElementById('loading-state');
+  const success = document.getElementById('success-state');
+  
+  overlay.classList.add('active');
+  loading.style.display = 'block';
+  success.classList.remove('show');
+  success.style.display = 'none';
+
+  // Simulate Network Request
+  setTimeout(() => {
+    // Calculate Result (Frontend Only)
+    const result = calculateResult();
+    
+    loading.style.display = 'none';
+    success.style.display = 'block';
+    
+    // Render Success Details
+    document.getElementById('result-email').textContent = quizData.user.email;
+    
+    // Check if admin allows showing score
+    const settings = quizData.settings || {};
+    if (settings.showScore) {
+      document.getElementById('result-stats').innerHTML = `
+        <div class="stat-box">
+          <h4>Your Score</h4>
+          <div style="color:var(--ev);">${result.score}%</div>
+        </div>
+        <div class="stat-box">
+          <h4>Status</h4>
+          <div>${result.passed ? 'Passed' : 'Review'}</div>
+        </div>
+      `;
+    } else {
+      document.getElementById('result-stats').innerHTML = `
+        <div class="stat-box">
+          <h4>Status</h4>
+          <div style="color:var(--ev);">Submitted</div>
+        </div>
+      `;
+    }
+
+    // Trigger animation
+    setTimeout(() => success.classList.add('show'), 50);
+
+    // Here you would typically send data to backend
+    console.log('Submission Payload:', {
+      quizId: currentQuizId,
+      user: quizData.user,
+      answers: userAnswers,
+      score: result,
+      timestamp: new Date().toISOString()
+    });
+
+  }, 1500); // 1.5s simulated delay
+}
+
+function calculateResult() {
+  const questions = quizData.questions;
+  let correct = 0;
+  let totalMcq = 0;
+
+  questions.forEach((q, idx) => {
+    if (q.type === 'mcq') {
+      totalMcq++;
+      if (userAnswers[idx] === q.correct) {
+        correct++;
+      }
+    }
+    // Written answers are not auto-graded in this demo
+  });
+
+  if (totalMcq === 0) return { score: 0, passed: false, text: "Pending Review" };
+
+  const percentage = Math.round((correct / totalMcq) * 100);
+  const passingScore = (quizData.settings && quizData.settings.passingScore) ? parseInt(quizData.settings.passingScore) : 70;
+  
+  return {
+    score: percentage,
+    passed: percentage >= passingScore,
+    total: totalMcq,
+    correct: correct
+  };
+}
+
+// ── UTILS ──
+
+function escapeHtml(text) {
+  if (!text) return '';
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function showToast(msg, type = 'info') {
+  const toast = document.getElementById('toast');
+  const icon = type === 'error' ? '<i class="ti ti-circle-x" style="color:var(--red)"></i>' : '<i class="ti ti-info-circle"></i>';
+  
+  toast.innerHTML = `${icon} ${msg}`;
+  toast.classList.add('show');
+  
+  setTimeout(() => {
+    toast.classList.remove('show');
+  }, 3000);
+}
+
+</script>
+</body>
+</html>
+```>
+</html>
+```>
+</html>
