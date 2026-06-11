@@ -851,30 +851,38 @@ function copyLink() {
   }
 
   try {
-    // 1. Robust Encoding (Handles special chars)
     const jsonString = JSON.stringify(q);
     const encodedData = btoa(unescape(encodeURIComponent(jsonString)));
     
-    // 2. Build the Link
-    const link = window.location.origin + '/tutor-quiz.html?data=' + encodedData;
-
-    // 3. Intelligent Copy Logic (Fixes the "Undefined" error)
+    // --- SMARTER LINK LOGIC ---
+    // This automatically finds the correct folder, whether it's root or a subfolder
+    let baseUrl = window.location.href; 
+    // If we are on index.html, remove it. If we are on '/', just append.
+    if (baseUrl.endsWith('index.html')) {
+        baseUrl = baseUrl.replace('index.html', '');
+    } else if (!baseUrl.endsWith('/')) {
+        baseUrl += '/';
+    }
     
-    // Check if the modern Clipboard API is available (Only works on HTTPS or Localhost)
+    const link = baseUrl + 'tutor-quiz.html?data=' + encodedData;
+
+    // Safety Check
+    if (link.length > 8000) {
+      alert('Quiz is too large for a link.');
+      return;
+    }
+
+    // Copy Logic
     if (navigator.clipboard && window.isSecureContext) {
       navigator.clipboard.writeText(link)
         .then(() => toast('Magic link copied!'))
-        .catch(err => {
-          console.error('Clipboard failed', err);
-          copyToClipboardFallback(link); // Fallback if permission denied
-        });
+        .catch(err => copyToClipboardFallback(link));
     } else {
-      // Fallback for local files (file://) or insecure contexts
       copyToClipboardFallback(link);
     }
 
   } catch (e) {
-    console.error('Encoding Error:', e);
+    console.error('Error:', e);
     alert('Error generating link: ' + e.message);
   }
 }
